@@ -1,0 +1,39 @@
+# eth4 on nodes have IPs on 2001:dba:://64 IPv6 subnet and IPs 2001:db8::100 and 2001:db8::200 are not in that
+# subnet, so plan fails
+
+runLitpScript two-node-std.inc
+
+litp create -t system -p /infrastructure/systems/sys3 -o system_name='sys3'
+litp create -t system -p /infrastructure/systems/sys4 -o system_name='sys4'
+
+litp create -t node -p /deployments/site1/clusters/cluster1/nodes/node3 -o hostname='node3'
+litp create -t node -p /deployments/site1/clusters/cluster1/nodes/node4 -o hostname='node4'
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/system -s /infrastructure/systems/sys3
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/system -s /infrastructure/systems/sys4
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/os -s /software/profiles/rhel_6
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/os -s /software/profiles/rhel_6
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node3/network_interfaces/if0 -o network_name='nodes' ipaddress='10.4.23.53'
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node4/network_interfaces/if0 -o ipaddress='10.4.23.54' network_name='nodes'
+
+litp create -t dhcp6-service -p /software/services/s2 -o service_name="dhcp_svc2"
+litp create -t dhcp6-subnet -p /software/services/s2/subnets/s1 -o network_name="traffic"
+litp create -t dhcp6-range -p /software/services/s2/subnets/s1/ranges/r1 -o start="2001:db8::100" end="2001:db8::200"
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node1/services/s2 -s /software/services/s2 -o primary="true"
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node2/services/s2 -s /software/services/s2 -o primary="false"
+
+litp create -t network -p /infrastructure/networking/networks/traffic -o  name='traffic'
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:2b:43:82 network_name=traffic ipv6address=2001:dba::1
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:2b:43:83 network_name=traffic ipv6address=2001:dba::2
+
+let __err_1 --err_type ValidationError --err_message '"start" address "2001:db8::100" is not valid for network "traffic"'
+let __err_2 --err_type ValidationError --err_message '"end" address "2001:db8::200" is not valid for network "traffic"'
+assertError __err_1 create_plan
+assertError __err_2 create_plan

@@ -1,0 +1,15 @@
+runLitpScript two-node-std.inc
+
+litp create -t dhcp-service -p /software/services/s1 -o service_name="dhcp_svc1"
+litp create -t dhcp-subnet -p /software/services/s1/subnets/s1 -o network_name="nodes"
+litp create -t dhcp-range -p /software/services/s1/subnets/s1/ranges/r1 -o start="10.10.10.1" end="10.10.10.10"
+
+litp create -t dhcp6-service -p /software/services/s2 -o service_name="dhcp_svc2"
+litp create -t dhcp6-subnet -p /software/services/s2/subnets/s1 -o network_name="nodes"
+litp create -t dhcp6-range -p /software/services/s2/subnets/s1/ranges/r1 -o start="fe80::a00:27ff:fe65:c8c1" end="fe80::a00:27ff:fe65:c8f4"
+  
+litp create -t dhcp-service -p /ms/services/s1 -o service_name="ms_svc"
+assertError --err_message 'Create plan failed: DHCP services may not be deployed on the Management Server "ms1"' create_plan
+
+litp create -t dhcp6-service -p /ms/services/s2 -o service_name="ms_svc2"
+assertError --err_message 'Create plan failed: DHCP services may not be deployed on the Management Server "ms1"' create_plan

@@ -1,0 +1,14 @@
+runLitpScript two-node-std.inc
+
+litp create -t dhcp-service -p /software/services/s1 -o service_name="dhcp_svc1"
+litp create -t dhcp-subnet -p /software/services/s1/subnets/s1 -o network_name="storage_1"
+litp create -t dhcp-range -p /software/services/s1/subnets/s1/ranges/r1 -o start="10.10.10.1" end="10.10.10.10"
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node1/services/s1 -s /software/services/s1 -o primary="true"
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node2/services/s1 -s /software/services/s1 -o primary="false"
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:2b:43:82 network_name=storage_1 ipaddress=10.10.10.12
+
+let __err_1 --err_type ValidationError --err_message 'Network "storage_1" does not have a subnet specified'
+let __err_2 --err_type ValidationError --err_message 'The network "storage_1" referenced by "dhcp-subnet" is not configured on node "node2"'
+assertError __err_1 __err_2 create_plan

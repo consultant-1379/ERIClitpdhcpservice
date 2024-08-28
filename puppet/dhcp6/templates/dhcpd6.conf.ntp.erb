@@ -1,0 +1,10 @@
+<% if @ntpservers %>
+# BEGIN NTP Section
+<% if @ntpservers.kind_of?(Array)-%>
+option ntp-servers <%= @ntpservers.join(', ') %>;
+<% else -%>
+option ntp-servers <%=@ntpservers%>;
+<% end -%>
+# END NTP Section
+<% end -%>
+

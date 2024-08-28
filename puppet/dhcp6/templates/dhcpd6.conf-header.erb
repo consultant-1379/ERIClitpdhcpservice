@@ -1,0 +1,31 @@
+# BEGIN DHCP6 Header
+# ----------
+# dhcpd6.conf
+# ----------
+authoritative;
+deny duplicates;
+deny declines;
+default-lease-time <%= @default_lease_time-%>;
+max-lease-time <%= @max_lease_time-%>;
+log-facility daemon;
+
+# ----------
+# Options
+# ----------
+ddns-update-style none;
+<%if @domainsearch then-%>
+option dhcp6.domain-search "<%= @domainsearch.join('", "')-%>";
+<%end-%>
+<%if @nameservers-%>
+<%if @nameservers.kind_of?(Array)-%>
+option dhcp6.name-servers <%= @nameservers.join(', ')-%>;
+<%else-%>
+option dhcp6.name-servers <%= @nameservers-%>;
+<%end-%>
+<%end-%>
+option dhcp6.preference <%= @preference-%>;
+# END DHCP Header
+
+# BEGIN DHCP Extra configurations
+include "/etc/dhcp/dhcpd6.pools";
+

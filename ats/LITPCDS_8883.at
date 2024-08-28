@@ -1,0 +1,51 @@
+runLitpScript two-node-std.inc
+
+litp create -t system -p /infrastructure/systems/sys3 -o system_name='sys3'
+litp create -t system -p /infrastructure/systems/sys4 -o system_name='sys4'
+
+litp create -t node -p /deployments/site1/clusters/cluster1/nodes/node3 -o hostname='node3'
+litp create -t node -p /deployments/site1/clusters/cluster1/nodes/node4 -o hostname='node4'
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/system -s /infrastructure/systems/sys3
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/system -s /infrastructure/systems/sys4
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/os -s /software/profiles/rhel_6
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/os -s /software/profiles/rhel_6
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node3/network_interfaces/if0 -o network_name='nodes' ipaddress='10.4.23.53'
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node4/network_interfaces/if0 -o ipaddress='10.4.23.54' network_name='nodes'
+
+litp create -t dhcp-service -p /software/services/s1 -o service_name="dhcp_svc1"
+litp create -t dhcp-subnet -p /software/services/s1/subnets/s1 -o network_name="storage_1"
+litp create -t dhcp-range -p /software/services/s1/subnets/s1/ranges/r1 -o start="10.10.10.1" end="10.10.10.10"
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node1/services/s1 -s /software/services/s1 -o primary="true"
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node2/services/s1 -s /software/services/s1 -o primary="false"
+
+litp create -t network -p /infrastructure/networking/networks/storage_1 -o subnet='10.10.10.0/24' name='storage_1'
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:2b:43:82 network_name=storage_1 ipaddress=10.10.10.12
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:eb:c3:96 network_name=storage_1 ipaddress=10.10.10.11
+
+litp create -t network -p /infrastructure/networking/networks/storage_2 -o subnet='30.30.30.0/24' name='storage_2'
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node3/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:2b:43:84 network_name=storage_2 ipaddress=30.30.30.13
+litp create -p /deployments/site1/clusters/cluster1/nodes/node4/network_interfaces/nic_4 -t eth -o device_name=eth4 macaddress=52:54:00:eb:c3:98 network_name=storage_2 ipaddress=30.30.30.14
+
+litp create_plan
+runPlanEnd
+
+litp create -t dhcp-service -p /software/services/s3 -o service_name="dhcp_svc3"
+litp create -t dhcp-subnet -p /software/services/s3/subnets/s1 -o network_name="storage_2"
+litp create -t dhcp-range -p /software/services/s3/subnets/s1/ranges/r1 -o start="30.30.30.20" end="30.30.30.30"
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node3/services/s3 -s /software/services/s3 -o primary="true"
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node4/services/s3 -s /software/services/s3 -o primary="false"
+
+litp update -p /deployments/site1/clusters/cluster1/nodes/node3/network_interfaces/nic_4 -o ipaddress=30.30.30.17
+
+litp create_plan
+runPlanEnd
